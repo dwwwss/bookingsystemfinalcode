@@ -1,0 +1,561 @@
+﻿<ConferenceBooking.Models.Meeting>
+
+    @{
+        ViewBag.Title = "Conference Room Booking";
+        Layout = null;
+    }
+    @Html.ValidationSummary()
+
+    @*    @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+        {
+            <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+        }
+
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+        }*@
+    @if (!string.IsNullOrEmpty(ViewBag.AlertMessage))
+    {
+        <div class="alert alert-success">@ViewBag.AlertMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+    }
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <title>@ViewBag.Title</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.min.js"></script>
+
+
+        <style>
+            #calendar {
+                max-width: 2600px;
+                margin: 0 auto;
+            }
+
+            .popup-form {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                padding: 20px;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+                z-index: 9999;
+                width: 400px;
+            }
+
+            .navbar {
+                background-color: #343a40;
+            }
+
+            .navbar-brand {
+                color: #ffffff;
+            }
+
+            h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 30px;
+            }
+
+            .btn-primary {
+                background-color: #007bff;
+                border-color: #007bff;
+            }
+
+                .btn-primary:hover {
+                    background-color: #0069d9;
+                    border-color: #0062cc;
+                }
+
+            .form-label {
+                font-weight: bold;
+            }
+
+            .card-header {
+                background-color: #343a40;
+                color: #ffffff;
+            }
+
+            .card-footer {
+                background-color: #f8f9fa;
+                border-top: none;
+            }
+
+                .card-footer button {
+                    margin-top: 10px;
+                }
+
+            .close-button {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                color: #000000;
+                opacity: 0.5;
+                cursor: pointer;
+            }
+
+                .close-button:hover {
+                    opacity: 1;
+                }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">Conference Room Booking</a>
+
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Meetings", "Home")">Meetings</a>
+                        </li>
+                        @*<li class="nav-item">
+                            <a class="nav-link" href="#">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Contact</a>
+                        </li>*@
+
+
+                        <li class="nav-item" style="margin-left:700px">
+                            <a class="nav-link" href="@Url.Action("Login", "Home")">Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-xxl-3">
+            <div class="row">
+                <div class="col-md-13">
+                    <h1>  <button id="addMeetingBtn" class="btn btn-primary">Add Meeting</button></h1>
+                    <div id="calendar"></div>
+                </div>
+                <div class="col-md-4">
+
+                </div>
+            </div>
+        </div>
+        <div class="popup-form" id="addMeetingForm" style="display: none;">
+            <div class="card">
+                <h5 class="card-header">Add Meeting</h5>
+                <div class="card-body">
+                    @using (Html.BeginForm("BookMeeting", "Home", FormMethod.Post))
+                    {
+                        <div class="mb-3">
+                            @Html.Label("Meeting Title", new { @class = "form-label" })
+                            @Html.TextBox("MeetingTitle", "", new { @class = "form-control", required = "required" })
+                        </div>
+                        <div class="mb-3">
+                            @Html.Label("Start Time", new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBox("StartTime", "", new { @class = "form-control", required = "required", @id = "addMeetingStartTime", type = "datetime-local" })
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            @Html.Label("End Time", new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBox("EndTime", "", new { @class = "form-control", required = "required", id = "addMeetingEndTime", type = "datetime-local" })
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            @Html.Label("Room", new { @class = "form-label" })
+                            @if (ViewBag.Rooms != null)
+                            {
+                                @Html.DropDownList("RoomId", new SelectList(ViewBag.Rooms, "RoomId", "RoomName"), new { @class = "form-control", required = "required", id = "addRoomDropdown" })
+                            }
+                            else
+                            {
+                                <p>No rooms available.</p>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Room Name:</label>
+                            <span id="addRoomName"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Capacity:</label>
+                            <span id="addRoomCapacity"></span>
+                        </div>
+
+                        @Html.Hidden("UserId", User.Identity.Name)
+
+                        <div class="mb-3">
+                            <input type="submit" value="Book Meeting" class="btn btn-primary" />
+                            <button id="closeForm" class="btn btn-secondary">Close</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="popup-form" id="editMeetingForm" style="display: none;">
+            <div class="card">
+                <h5 class="card-header">Edit Meeting</h5>
+                <div class="card-body">
+                    @using (Html.BeginForm("EditMeeting", "Home", FormMethod.Post))
+                    {
+                        @Html.Hidden("MeetingId", "", new { @id = "editMeetingId" })
+                        <div class="mb-3">
+                            @Html.Label("Meeting Title", new { @class = "form-label" })
+                            @Html.TextBox("MeetingTitle", "", new { @class = "form-control", required = "required", @id = "editMeetingTitle" })
+                        </div>
+                        <div class="mb-3">
+                            @Html.Label("Start Time", new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBox("StartTime", "", new { @class = "form-control", required = "required", @id = "editMeetingStartTime", type = "datetime-local" })
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            @Html.Label("End Time", new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBox("EndTime", "", new { @class = "form-control", required = "required", id = "editMeetingEndTime", type = "datetime-local" })
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.Label("Room", new { @class = "form-label" })
+                            @if (ViewBag.Rooms != null)
+                            {
+                                @Html.DropDownList("RoomId", new SelectList(ViewBag.Rooms, "RoomId", "RoomName"), new { @class = "form-control", required = "required", id = "editRoomDropdown" })
+                            }
+                            else
+                            {
+                                <p>No rooms available.</p>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Room Name:</label>
+                            <span id="editRoomName"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Capacity:</label>
+                            <span id="editRoomCapacity"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <input type="submit" value="Save Changes" class="btn btn-primary" />
+
+
+                            <form id="deleteMeetingForm" action="/Home/DeleteMeeting" method="post">
+                                <input type="hidden" id="deleteMeetingId" name="id" value="" />
+                                <button type="button" class="deleteMeetingBtn btn btn-danger" onclick="openDeleteMeetingPopup()">Delete</button>
+
+                            </form>
+
+
+                            <button id="closeEditForm" class="btn btn-secondary">Close</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="popup-form" id="deleteMeetingForm" style="display: none;">
+            <div class="card">
+                <h5 class="card-header">Delete Meeting</h5>
+                <div class="card-body">
+                    <button type="button" id="closeDeleteMeetingForm" class="btn-close" onclick="closeDeleteMeetingPopup()" aria-label="Close"></button>
+                    <p>Are you sure you want to delete this meeting?</p>
+                    <form id="deleteMeeting" action="@Url.Action("DeleteMeeting", "Home")" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="editMeetingId" name="id" value="" />
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeDeleteMeetingPopup()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+
+      $(document).ready(function () {
+    var calendar = $('#calendar').fullCalendar({
+        // Calendar options
+        header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+        /* slotDuration: '02:00:00', */// Set the default duration of each time slot to 1 hour
+        events: [
+            @foreach (var meeting in Model)
+            {
+                <text>
+                    {
+                        title: '@meeting.MeetingTitle',
+                        start: '@meeting.StartTime.ToString("yyyy-MM-ddTHH:mm:ss")',
+                        end: '@meeting.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")',
+                        id: '@meeting.MeetingId',
+                        roomId: '@meeting.RoomId'
+                        // Add the RoomId property here
+                    },
+                </text>
+            }
+        ],
+        dayClick: function (date, jsEvent, view) {
+            var startTime = moment(date).format("YYYY-MM-DDTHH:mm");
+            var endTime = moment(date).add(1, 'hour').format("YYYY-MM-DDTHH:mm");
+
+            /*  var isSlotBooked = checkIfSlotBooked(startTime, endTime);
+            if (isSlotBooked) {
+                alert('This slot is already booked. Please select another slot.');
+                return;
+            }
+            */
+            $('#addMeetingForm').show();
+            $('#StartTime').val(startTime);
+            $('#EndTime').val(endTime);
+            $('#addMeetingForm')[0].reset();
+        },
+        eventClick: function (calEvent, jsEvent, view) {
+            var meetingId = calEvent.id;
+            var meetingTitle = calEvent.title;
+            var startTime = moment(calEvent.start).format("YYYY-MM-DDTHH:mm");
+            var endTime = moment(calEvent.end).format("YYYY-MM-DDTHH:mm");
+            var roomId = calEvent.roomId;
+
+            $('#editMeetingId').val(meetingId);
+            $('#editMeetingTitle').val(meetingTitle);
+            $('#editMeetingStartTime').val(startTime);
+            $('#editMeetingEndTime').val(endTime);
+            $('#editRoomId').val(roomId);
+
+            $('#editMeetingForm').show();
+        },
+        eventRender: function (event, element) {
+            var startTime = moment(event.start).format("YYYY-MM-DD HH:mm");
+            var endTime = moment(event.end).format("YYYY-MM-DD HH:mm");
+
+            var content = '<div><b>' + event.title + '</b></div>' +
+                '<div>Start: ' + startTime + '</div>' +
+                '<div>End: ' + endTime + '</div>';
+
+            element.find('.fc-title').html(content);
+        }
+    });
+
+
+
+
+            // Function to check if the slot is already booked
+            // Function to check if the slot is already booked
+           function checkIfSlotBooked(startTime, endTime) {
+                var events = calendar.fullCalendar('clientEvents');
+                for (var i = 0; i < events.length; i++) {
+                    var eventStart = moment(events[i].start).format("YYYY-MM-DDTHH:mm");
+                    var eventEnd = moment(events[i].end).format("YYYY-MM-DDTHH:mm");
+
+                    // Check if the selected slot overlaps with any existing event
+                    if (startTime < eventEnd && endTime > eventStart) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+/*
+          $('.deleteMeetingBtn').click(function () {
+              var meetingId = $('#editMeetingId').val(); // Retrieve the meeting ID from the hidden input field
+
+              // Show a confirmation popup
+              if (confirm("Are you sure you want to delete this meeting?")) {
+                  // Create a form dynamically
+                  var form = $('<form>', {
+                      'id': 'deleteMeetingForm',
+                      'action': '~/Home/DeleteMeeting',
+                      'method': 'POST'
+                  });
+
+                  // Create an input field for the meeting ID
+                  var input = $('<input>', {
+                      'type': 'hidden',
+                      'name': 'id',
+                      'value': meetingId
+                  });
+
+                  // Append the input field to the form
+                  form.append(input);
+
+                  // Append the form to the body and submit it
+                  form.appendTo('body').submit();
+              }
+          });*/
+
+            $('#addMeetingBtn').click(function () {
+                $('#addMeetingForm').show();
+            });
+
+            // Close add meeting form
+            $('#closeForm').click(function () {
+                $('#addMeetingForm').hide();
+            });
+
+            // Close edit meeting form
+            $('#closeEditForm').click(function () {
+                $('#editMeetingForm').hide();
+            });
+
+            // Handle time slot duration selection
+            $('#slotDurationSelect').change(function () {
+                var duration = $(this).val();
+                calendar.fullCalendar('option', 'slotDuration', duration);
+            });
+
+            // Submit edit meeting form
+            $('#editMeetingForm').on('submit', function (e) {
+                /*e.preventDefault();*/ // Prevent the default form submission behavior
+
+                var formData = $(this).serialize(); // Serialize the form data
+
+                $.ajax({
+                    url: '/Home/EditMeeting',
+                    type: 'POST',
+                    data: formData,
+                    success: function (data) {
+                        if (data.success) {
+                            calendar.fullCalendar('refetchEvents'); // Refresh the calendar after successful update
+                            $('#editMeetingForm').hide(); // Hide the edit form
+                        }
+                    }
+                });
+            });
+        });
+$(document).ready(function () {
+    // Attach change event handler to the room dropdown in the edit meeting form
+    $('#editRoomDropdown').change(function () {
+        var selectedRoomId = $(this).val(); // Get the selected room ID
+        var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+        if (selectedRoom) {
+            // Update the room name and capacity
+            $('#editRoomName').text(selectedRoom.RoomName);
+            $('#editRoomCapacity').text(selectedRoom.Capacity);
+        }
+    });
+
+    // Attach change event handler to the room dropdown in the add meeting form
+    $('#addRoomDropdown').change(function () {
+        var selectedRoomId = $(this).val(); // Get the selected room ID
+        var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+        if (selectedRoom) {
+            // Update the room name and capacity
+            $('#addRoomName').text(selectedRoom.RoomName);
+            $('#addRoomCapacity').text(selectedRoom.Capacity);
+        }
+    });
+
+    // Function to find a room object by its ID
+    function findRoomById(roomId) {
+        var rooms = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Rooms)); // Get the list of rooms from ViewBag
+
+        for (var i = 0; i < rooms.length; i++) {
+            if (rooms[i].RoomId == roomId) {
+                return rooms[i];
+            }
+        }
+
+        return null;
+    }
+});
+
+        </script>
+        <script>
+    $(document).ready(function () {
+        // Attach change event handler to the room dropdown
+        $('#addRoomDropdown').change(function () {
+            var selectedRoomId = $(this).val(); // Get the selected room ID
+            var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+            if (selectedRoom) {
+                // Update the room name and capacity
+                $('#addRoomName').text(selectedRoom.RoomName);
+                $('#addRoomCapacity').text(selectedRoom.Capacity);
+            }
+        });
+
+        // Function to find a room object by its ID
+        function findRoomById(roomId) {
+            var rooms = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Rooms)); // Get the list of rooms from ViewBag
+
+            for (var i = 0; i < rooms.length; i++) {
+                if (rooms[i].RoomId == roomId) {
+                    return rooms[i];
+                }
+            }
+
+            return null;
+        }
+    });
+
+
+    //delete
+
+
+
+        </script>
+        <script>
+            $(document).ready(function () {
+    $('.deleteMeetingBtn').click(function () {
+        var meetingId = $('#editMeetingId').val();
+        $('#deleteMeetingId').val(meetingId); // Set the meeting ID in the hidden input field
+
+        // Submit the form
+        $('#deleteMeetingForm').submit();
+    });
+
+    // Display alert message if an error occurred
+    var errorMessage = '@(TempData["ErrorMessage"] as string)';
+    if (errorMessage) {
+        alert(errorMessage);
+    }
+});
+
+            // Add a click event listener to the delete button
+            $('.deleteMeetingBtn').click(function () {
+                var meetingId = $('#editMeetingId').val(); // Retrieve the meeting ID from the hidden input field
+
+                // Set the meeting ID in the form
+                $('#deleteMeeting #editMeetingId').val(meetingId);
+
+                // Show the delete meeting form
+                $('#deleteMeetingForm').show();
+            });
+
+            // Function to close the delete meeting popup
+            function closeDeleteMeetingPopup() {
+                $('#deleteMeetingForm').hide();
+            }
+
+        </script>
+
+
+
+    </body>
+</html>

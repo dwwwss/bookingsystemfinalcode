@@ -1,0 +1,128 @@
+﻿@model ConferenceBooking.Models.Loginmodel
+
+@{
+    ViewBag.Title = "Login";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #213555;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 25vh;
+        }
+
+        .card {
+            max-width: 400px;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background-color: #fff;
+            color: #333;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .card-body {
+            background-color: #fff;
+            padding: 30px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: relative;
+            top: 50%;
+            right: 47px;
+            transform: translateY(-1%);
+            cursor: pointer;
+        }
+
+        .links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .login-button {
+            width: 30%;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Login</h2>
+            </div>
+            <div class="card-body">
+                @using (Html.BeginForm("Login", "Home", FormMethod.Post))
+                {
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Username)
+                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", required = "required" })
+                        <div class="invalid-feedback">
+                            @Html.ValidationMessageFor(m => m.Username)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="password-container">
+                            @Html.LabelFor(m => m.Password)
+                            <div class="input-group">
+                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", required = "required" })
+                                <span class="input-group-text password-toggle" onclick="togglePasswordVisibility()">&#128065;</span>
+                            </div>
+                            <div class="invalid-feedback">
+                                @Html.ValidationMessageFor(m => m.Password)
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block login-button">Login</button>
+                    <div class="links">
+                        <a href="@Url.Action("Register", "Home")" class="btn btn-link">Register Here</a>
+                        <button type="button" class="btn btn-link" onclick="location.href='@Url.Action("ForgotPassword", "Home")'">Forgot Password</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        function togglePasswordVisibility() {
+            var passwordInput = document.getElementById("Password");
+            var toggleButton = document.querySelector(".password-toggle");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleButton.innerHTML = "&#128064;"; // Show the hide icon
+            } else {
+                passwordInput.type = "password";
+                toggleButton.innerHTML = "&#128065;"; // Show the show icon
+            }
+        }
+    </script>
+</body>
+</html>

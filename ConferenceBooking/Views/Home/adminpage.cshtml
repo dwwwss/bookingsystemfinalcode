@@ -1,0 +1,1116 @@
+﻿@using ConferenceBooking.Models
+
+@*@if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }*@
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <script>alert('@ViewBag.ErrorMessage');</script>
+}
+
+<!DOCTYPE html>
+<html>
+<
+<head>
+    <title>Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+
+    <style>
+        body {
+            padding-top: 70px;
+        }
+        .popup-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            width: 400px;
+        }
+        .sidebar {
+            background-color: #333;
+            padding: 20px;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+
+            .sidebar ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .sidebar .nav-link {
+                color: #fff;
+                padding: 50px;
+                display: block;
+                border-bottom: 1px solid #555;
+                transition: background-color 0.3s ease;
+            }
+
+                .sidebar .nav-link:last-child {
+                    border-bottom: none;
+                }
+
+                .sidebar .nav-link:hover {
+                    background-color: #555;
+                }
+
+                .sidebar .nav-link.active {
+                    background-color: #fff;
+                    color: #000;
+                    font-weight: bold;
+                }
+/*
+        .content {
+            margin-left: 50px;
+            padding: 10px;
+            transition: margin-left 0.3s ease;
+        }*/
+
+        .table-actions {
+            white-space: nowrap;
+        }
+
+        thead {
+            background-color: #f8f9fa;
+        }
+
+            thead th {
+                color: #000;
+                font-weight: bold;
+                border-top: none;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn-add-meeting {
+            margin-left: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <a href="~/Home/Login" class="logout">
+                        <svg class="logout-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                             fill="currentColor" width="16" height="16">
+                            <path d="M19 12H8.41l2.3-2.29a1 1 0 0 0-1.42-1.42l-4 4a1 1 0 0 0 0 1.42l4 4a1 1 0 0 0 1.42-1.42L8.41 13H19a1 1 0 0 0 0-2z" />
+                        </svg>
+                        Logout
+                    </a>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#rooms">Rooms</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users">Users</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="content">
+                    <div id="dashboard" class="page">
+                        <h2>Dashboard</h2>
+                        <button id="addMeetingButton" class="btn btn-primary btn-sm" style="margin-left: 10px">Add Meeting</button>
+
+                        <div class="container mt-4">
+                            @if (Model != null && Model.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Sr. No</th>
+                                                <th>Title</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>Booked By </th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var meeting in Model)
+                                            {
+                                                <tr>
+                                                    <td>@(Model.IndexOf(meeting) + 1)</td>
+                                                    <td>@meeting.MeetingTitle</td>
+                                                    <td>@meeting.StartTime.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                                                    <td>@meeting.EndTime.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                                                    <td>@meeting.BookedBy</td> <!-- Displaying the booked by name -->
+                                                    <td class="table-actions">
+                                                        <button class="btn btn-primary btn-sm edit-button" data-meeting-id="@meeting.MeetingId">Edit</button>
+                                                        <button class="btn btn-danger btn-sm" onclick="openDeleteMeetingPopup('@meeting.MeetingId')">Delete</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p>No meetings found.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div id="rooms" class="page">
+                        <h2>Rooms</h2>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRoomModal" onclick="openAddRoomPopup()" style="margin-left: 10px">Add Room</button>
+
+                        <div class="table-responsive mt-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sr. No</th>
+                                        <th>Room Name</th>
+                                        <th>short_code</th>
+                                        <th>Capacity</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int serialNumber = 1;
+                                    }
+
+                                    @if (ViewBag.Rooms != null)
+                                    {
+                                        foreach (var room in ViewBag.Rooms)
+                                        {
+                                            <tr>
+                                                <td>@serialNumber</td>
+                                                <td>@room.RoomName</td>
+                                                <td>@room.RoomCode</td>
+                                                <td>@room.Capacity</td>
+                                                <td>
+                                                    <button class="btn btn-primary btn-sm" onclick="openEditRoomPopup('@room.RoomId', '@room.RoomName', '@room.Capacity')">Edit</button>
+
+                                                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteRoom('@room.RoomId')">Delete</button>
+                                                </td>
+
+                                            </tr>
+                                            serialNumber++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5">No rooms available</td>
+                                        </tr>
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="users" class="page">
+                        <h2>Users</h2>
+                        <button id="addUserButton" class="btn btn-primary btn-sm" style="margin-left: 10px">Add User</button>
+
+                        <div class="table-responsive mt-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sr.no</th>
+                                        <th>User Name</th>
+                                        <th>Email</th>
+                                        <th>Position</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int serial = 1;
+                                    }
+
+                                    @if (ViewBag.Users != null)
+                                    {
+                                        foreach (var user in ViewBag.Users)
+                                        {
+                                            <tr>
+                                                <td>@serial</td>
+                                                <td>@user.UserName</td>
+                                                <td>@user.email</td>
+                                                <td>@user.position</td>
+                                                <td>
+                                                    <button class="btn btn-primary btn-sm" onclick="openEditUserPopup('@user.UserId')">Edit</button>
+
+                                                    <button class="btn btn-danger btn-sm" onclick="openDeleteUserPopup('@user.UserId')">Delete</button>
+
+                                                </td>
+                                            </tr>
+                                            serial++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5">No users available</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+<!-- Modal for adding a user --><!-- Include jQuery library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Include Bootstrap library -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Your HTML code with form and JavaScript -->
+<!-- ... -->
+
+<div class="popup-form" id="addUserForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Add User</h5>
+        <div class="card-body">
+            <button type="button" class="btn-close" onclick="closePopup()" aria-label="Close"></button>
+            @using (Html.BeginForm("AddUser", "Home", null, FormMethod.Post, new { @class = "mt-4" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label for="Name" class="form-label">Name</label>
+                    <input type="text" class="form-control" name="Name" id="Name" required />
+                    <span id="nameError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Email" class="form-label">Email</label>
+                    <input type="email" class="form-control" name="Email" id="Email" required />
+                    <span id="emailError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Password" class="form-label">Password</label>
+                    <input type="password" class="form-control" name="Password" id="Password" required />
+                    <span id="passwordError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" name="ConfirmPassword" id="ConfirmPassword" required />
+                    <span id="confirmPasswordError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Position" class="form-label">Position</label>
+                    <select name="Position" id="Position" class="form-control" required>
+                        <option value="">Select Position</option>
+                        @foreach (var position in ViewBag.PositionList as List<SelectListItem>)
+                        {
+                            <option value="@position.Value">@position.Text</option>
+                        }
+                    </select>
+                    <span id="positionError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div id="message" class="alert alert-dismissible" style="display: none;">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong></strong>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary" onclick="validateForm(event)">Register</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateForm(event) {
+        event.preventDefault(); // Prevent the form from submitting by default
+
+        var form = document.getElementById("addUserForm");
+        var name = form.elements["Name"].value;
+        var email = form.elements["Email"].value;
+        var password = form.elements["Password"].value;
+        var confirmPassword = form.elements["ConfirmPassword"].value;
+        var position = form.elements["Position"].value;
+
+        // Perform validation checks
+        var isValid = true;
+
+        if (name.trim() === "") {
+            document.getElementById("nameError").textContent = "Please enter a name.";
+            document.getElementById("nameError").style.display = "block";
+            isValid = false;
+        } else {
+            document.getElementById("nameError").style.display = "none";
+        }
+
+        if (email.trim() === "") {
+            document.getElementById("emailError").textContent = "Please enter an email.";
+            document.getElementById("emailError").style.display = "block";
+            isValid = false;
+        } else {
+            document.getElementById("emailError").style.display = "none";
+        }
+
+        if (password.trim() === "") {
+            document.getElementById("passwordError").textContent = "Please enter a password.";
+            document.getElementById("passwordError").style.display = "block";
+            isValid = false;
+        } else {
+            document.getElementById("passwordError").style.display = "none";
+        }
+
+        if (confirmPassword.trim() === "") {
+            document.getElementById("confirmPasswordError").textContent = "Please confirm the password.";
+            document.getElementById("confirmPasswordError").style.display = "block";
+            isValid = false;
+        } else if (confirmPassword !== password) {
+            document.getElementById("confirmPasswordError").textContent = "Passwords do not match.";
+            document.getElementById("confirmPasswordError").style.display = "block";
+            isValid = false;
+        } else {
+            document.getElementById("confirmPasswordError").textContent = ""; // Clear any previous error message
+            document.getElementById("confirmPasswordError").style.display = "none";
+        }
+
+
+        if (position.trim() === "") {
+            document.getElementById("positionError").textContent = "Please select a position.";
+            document.getElementById("positionError").style.display = "block";
+            isValid = false;
+        } else {
+            document.getElementById("positionError").style.display = "none";
+        }
+
+        if (isValid) {
+            form.submit(); // Submit the form if all validation checks pass
+        }
+    }
+</script>
+
+
+
+
+
+
+
+<!-- Modal for adding a room -->
+<!-- Modal for adding a room -->
+<div class="popup-form" id="addRoomForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Add Room</h5>
+        <div class="card-body">
+            <button type="button" id="closeForm" class="btn-close" onclick="closePopup()" aria-label="Close"></button>
+            @using (Html.BeginForm("AddRoom", "Home", FormMethod.Post, new { @class = "mt-4", onsubmit = "return validateForm()" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label for="RoomName" class="form-label">Room Name</label>
+                    <input type="text" class="form-control" name="RoomName" id="RoomName" />
+                    <span id="roomNameError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="RoomCode" class="form-label">Room Code</label>
+                    <input type="text" class="form-control" name="RoomCode" id="RoomCode" />
+                    <span id="roomCodeError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Capacity" class="form-label">Capacity</label>
+                    <input type="number" class="form-control" name="Capacity" id="Capacity" />
+                    <span id="capacityError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div id="message" class="alert alert-dismissible" style="display: none;">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong></strong>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<script>
+    function validateForm() {
+        // Reset error messages
+        document.getElementById("roomNameError").style.display = "none";
+        document.getElementById("roomCodeError").style.display = "none";
+        document.getElementById("capacityError").style.display = "none";
+
+        // Get form values
+        var roomName = document.getElementById("RoomName").value;
+        var roomCode = document.getElementById("RoomCode").value;
+        var capacity = document.getElementById("Capacity").value;
+
+        // Validate form fields
+        var isValid = true;
+
+        if (roomName.trim() === "") {
+            document.getElementById("roomNameError").innerText = "Room Name is required";
+            document.getElementById("roomNameError").style.display = "block";
+            isValid = false;
+        }
+
+        if (roomCode.trim() === "") {
+            document.getElementById("roomCodeError").innerText = "Room Code is required";
+            document.getElementById("roomCodeError").style.display = "block";
+            isValid = false;
+        }
+
+        if (capacity.trim() === "" || parseInt(capacity) <= 0) {
+            document.getElementById("capacityError").innerText = "Capacity must be a positive number";
+            document.getElementById("capacityError").style.display = "block";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+</script>
+
+<div class="popup-form" id="editRoomForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Edit Room</h5>
+        <div class="card-body">
+            <button type="button" id="closeEditForm" class="btn-close" onclick="closeEditPopup()" aria-label="Close"></button>
+            @using (Html.BeginForm("EditRoom", "Home", FormMethod.Post, new { @class = "mt-4", onsubmit = "return validateEditForm()" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="RoomId" id="editRoomId" />
+
+                <div class="mb-3">
+                    <label for="EditRoomName" class="form-label">Room Name</label>
+                    <input type="text" class="form-control" name="EditRoomName" id="editRoomName" />
+                    <span id="editRoomNameError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="EditRoomCode" class="form-label">Room Code</label>
+                    <input type="text" class="form-control" name="EditRoomCode" id="editRoomCode" />
+                    <span id="editRoomCodeError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="EditCapacity" class="form-label">Capacity</label>
+                    <input type="number" class="form-control" name="EditCapacity" id="editCapacity" />
+                    <span id="editCapacityError" class="text-danger" style="display: none;"></span>
+                </div>
+
+                <div id="editMessage" class="alert alert-dismissible" style="display: none;">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong></strong>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<script>
+    function validateEditForm() {
+        // Reset error messages
+        document.getElementById("editRoomNameError").style.display = "none";
+        document.getElementById("editRoomCodeError").style.display = "none";
+        document.getElementById("editCapacityError").style.display = "none";
+
+        // Get form values
+        var roomName = document.getElementById("editRoomName").value;
+        var roomCode = document.getElementById("editRoomCode").value;
+        var capacity = document.getElementById("editCapacity").value;
+
+        // Validate form fields
+        var isValid = true;
+
+        if (roomName.trim() === "") {
+            document.getElementById("editRoomNameError").innerText = "Room Name is required";
+            document.getElementById("editRoomNameError").style.display = "block";
+            isValid = false;
+        }
+
+        if (roomCode.trim() === "") {
+            document.getElementById("editRoomCodeError").innerText = "Room Code is required";
+            document.getElementById("editRoomCodeError").style.display = "block";
+            isValid = false;
+        }
+
+        if (capacity.trim() === "" || parseInt(capacity) <= 0) {
+            document.getElementById("editCapacityError").innerText = "Capacity must be a positive number";
+            document.getElementById("editCapacityError").style.display = "block";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+</script>
+
+<script>
+    function openEditRoomPopup(roomId, roomName, roomCode, capacity) {
+        document.getElementById("editRoomId").value = roomId;
+        document.getElementById("editRoomName").value = roomName;
+        document.getElementById("editRoomCode").value = roomCode;
+        document.getElementById("editCapacity").value = capacity;
+        $("#editRoomForm").fadeIn();
+    }
+
+    function closeEditPopup() {
+        $("#editRoomForm").fadeOut();
+    }
+</script>
+
+<script>
+    function openAddRoomPopup() {
+        $("#addRoomForm").show();
+    }
+    $(document).ready(function () {
+        $("#closeForm").click(function () {
+            $(".popup-form").hide();
+        });
+    });
+</script>
+<div class="popup-form" id="deleteRoomForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Delete Room</h5>
+        <div class="card-body">
+            <button type="button" id="closeDeleteForm" class="btn-close" onclick="closeDeletePopup()" aria-label="Close"></button>
+            <p>Are you sure you want to delete this room?</p>
+            <form id="deleteRoomForm" action="@Url.Action("DeleteRoom", "Home")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="deleteRoomId" name="RoomId" value="" />
+                <div class="text-center">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDeletePopup()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditRoomPopup(roomId, roomName, roomCode, capacity) {
+        document.getElementById("editRoomId").value = roomId;
+        document.getElementById("editRoomName").value = roomName;
+        document.getElementById("editRoomCode").value = roomCode;
+        document.getElementById("editCapacity").value = capacity;
+        $("#editRoomForm").fadeIn();
+    }
+
+    function closeEditPopup() {
+        $("#editRoomForm").fadeOut();
+    }
+
+    function confirmDeleteRoom(roomId) {
+        document.getElementById("deleteRoomId").value = roomId;
+        $("#deleteRoomForm").fadeIn();
+    }
+
+    function closeDeletePopup() {
+        $("#deleteRoomForm").fadeOut();
+    }
+</script>
+   
+<div class="popup-form" id="addMeetingForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Add Meeting</h5>
+        <div class="card-body">
+            @using (Html.BeginForm("BookMeeting", "Home", FormMethod.Post))
+            {
+                <div class="mb-3">
+                    @Html.Label("Meeting Title", new { @class = "form-label" })
+                    @Html.TextBox("MeetingTitle", "", new { @class = "form-control", required = "required" })
+                </div>
+                <div class="mb-3">
+                    @Html.Label("Start Time", new { @class = "form-label" })
+                    <div class="input-group">
+                        @Html.TextBox("StartTime", "", new { @class = "form-control", required = "required", @id = "addMeetingStartTime", type = "datetime-local" })
+                    </div>
+                </div>
+                <div class="mb-3">
+                    @Html.Label("End Time", new { @class = "form-label" })
+                    <div class="input-group">
+                        @Html.TextBox("EndTime", "", new { @class = "form-control", required = "required", id = "addMeetingEndTime", type = "datetime-local" })
+                    </div>
+                </div>
+                <div class="mb-3">
+                    @Html.Label("Room", new { @class = "form-label" })
+                    @if (ViewBag.Rooms != null)
+                    {
+                        @Html.DropDownList("RoomId", new SelectList(ViewBag.Rooms, "RoomId", "RoomName"), new { @class = "form-control", required = "required", id = "addRoomDropdown" })
+                    }
+                    else
+                    {
+                        <p>No rooms available.</p>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Room Name:</label>
+                    <span id="addRoomName"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Capacity:</label>
+                    <span id="addRoomCapacity"></span>
+                </div>
+
+
+
+                <div class="mb-3">
+                    <input type="submit" value="Book Meeting" class="btn btn-primary" />
+                    <button id="closeForm" class="btn btn-secondary">Close</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+<div class="popup-form" id="editMeetingForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Edit Meeting</h5>
+        <div class="card-body">
+            @using (Html.BeginForm("Edit", "Home", FormMethod.Post))
+            {
+                <input type="hidden" id="meetingId" name="MeetingId" />
+
+                <div class="mb-3">
+                    @Html.Label("Meeting Title", new { @class = "form-label" })
+                    @Html.TextBox("MeetingTitle", "", new { @class = "form-control", required = "required" })
+                </div>
+                <div class="mb-3">
+                    @Html.Label("Start Time", new { @class = "form-label" })
+                    <div class="input-group">
+                        @Html.TextBox("StartTime", "", new { @class = "form-control", required = "required", type = "datetime-local" })
+                    </div>
+                </div>
+                <div class="mb-3">
+                    @Html.Label("End Time", new { @class = "form-label" })
+                    <div class="input-group">
+                        @Html.TextBox("EndTime", "", new { @class = "form-control", required = "required", type = "datetime-local" })
+                    </div>
+                </div>
+                <div class="mb-3">
+                    @Html.Label("Room", new { @class = "form-label" })
+                    @if (ViewBag.Rooms != null)
+                    {
+                        @Html.DropDownList("RoomId", new SelectList(ViewBag.Rooms, "RoomId", "RoomName"), new { @class = "form-control", required = "required" })
+                    }
+                    else
+                    {
+                        <p>No rooms available.</p>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Room Name:</label>
+                    <span id="editRoomName"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Capacity:</label>
+                    <span id="editRoomCapacity"></span>
+                </div>
+
+                <div class="mb-3">
+                    <input type="submit" value="Update Meeting" class="btn btn-primary" />
+                    <button id="closeForm" class="btn btn-secondary">Close</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="popup-form" id="editRoomForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Edit Room</h5>
+        <div class="card-body">
+            @using (Html.BeginForm("EditRoom", "Home", FormMethod.Post))
+            {
+                <div class="mb-3">
+                    @Html.Label("Room Name", new { @class = "form-label" })
+                    @Html.TextBox("RoomName", "", new { @class = "form-control", required = "required", @id = "editRoomName" })
+                </div>
+                <div class="mb-3">
+                    @Html.Label("Capacity", new { @class = "form-label" })
+                    @Html.TextBox("Capacity", "", new { @class = "form-control", required = "required", id = "editRoomCapacity" })
+                </div>
+                <div class="mb-3">
+                    <input type="hidden" id="editRoomId" name="RoomId" value="" />
+                    <input type="submit" value="Update Room" class="btn btn-primary" />
+                    <button id="closeEditForm" class="btn btn-secondary">Close</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="popup-form" id="deleteMeetingForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Delete Meeting</h5>
+        <div class="card-body">
+            <button type="button" id="closeDeleteMeetingForm" class="btn-close" onclick="closeDeleteMeetingPopup()" aria-label="Close"></button>
+            <p>Are you sure you want to delete this meeting?</p>
+            <form id="deleteMeetingForm" action="@Url.Action("Delete", "Home")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="deleteMeetingId" name="MeetingId" value="" />
+                <div class="text-center">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDeleteMeetingPopup()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteMeetingPopup(meetingId) {
+        document.getElementById("deleteMeetingId").value = meetingId;
+        $("#deleteMeetingForm").fadeIn();
+    }
+
+    function closeDeleteMeetingPopup() {
+        $("#deleteMeetingForm").fadeOut();
+    }
+</script>
+
+
+
+
+
+<div class="popup-form" id="editUserForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Edit User</h5>
+        <div class="card-body">
+            @using (Html.BeginForm("EditUser", "Home", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="UserId" id="editUserId" />
+
+                <div class="mb-3">
+                    <label for="EditUserName" class="form-label">UserName</label>
+                    <input type="text" class="form-control" name="userName" id="editUserName" />
+
+                </div>
+
+                <div class="mb-3">
+                    <label for="EditEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" name="Email" id="editEmail" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="EditPosition" class="form-label">Position</label>
+                    <input type="text" class="form-control" name="Position" id="editPosition" />
+                </div>
+
+                <div id="editUserMessage" class="alert alert-dismissible" style="display: none;">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong></strong>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditUserPopup()">Close</button> <!-- Close button -->
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditUserPopup(userId, userName, email, position) {
+        document.getElementById("editUserId").value = userId;
+        document.getElementById("editUserName").value = userName;
+        document.getElementById("editEmail").value = email;
+        document.getElementById("editPosition").value = position;
+        $("#editUserForm").fadeIn();
+    }
+
+    function closeEditUserPopup() {
+        $("#editUserForm").fadeOut();
+    }
+
+    function closeEditUserPopup() {
+        $("#editUserForm").fadeOut();
+    }
+</script>
+<div class="popup-form" id="deleteUserForm" style="display: none;">
+    <div class="card">
+        <h5 class="card-header">Delete User</h5>
+        <div class="card-body">
+            @using (Html.BeginForm("DeleteUser", "Home", FormMethod.Post, new { id = "deleteUserForm" }))
+            {
+                <input type="hidden" id="deleteUserId" name="UserId" />
+
+                <div class="mb-3">
+                    <p>Are you sure you want to delete this user?</p>
+                </div>
+
+                <div class="mb-3">
+                    <input type="submit" value="Delete User" class="btn btn-danger" />
+                    <button type="button" id="closeForm" class="btn btn-secondary" onclick="closeDeleteUserPopup()">Close</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteUserPopup(userId) {
+        document.getElementById("deleteUserId").value = userId;
+        $("#deleteUserForm").fadeIn();
+    }
+
+    function closeDeleteUserPopup() {
+        $("#deleteUserForm").fadeOut();
+    }
+</script>
+
+
+
+
+<script>
+    // Function to display the add meeting popup
+    function showAddMeetingPopup() {
+        // Code to show the add meeting popup
+        document.getElementById("addMeetingForm").style.display = "block";
+    }
+
+    // Function to display the edit meeting popup
+    function showEditMeetingPopup(meetingId) {
+        // Code to show the edit meeting popup
+        document.getElementById("editMeetingForm").style.display = "block";
+        // Code to set the meetingId in the hidden input field
+        document.getElementById("meetingId").value = meetingId;
+    }
+
+    $(document).ready(function () {
+        // Attach click event handler to the "Add Meeting" button
+        $("#addMeetingButton").click(function () {
+            showAddMeetingPopup();
+        });
+
+        // Attach click event handler to the "Edit" buttons
+        $(".edit-button").click(function () {
+            var meetingId = $(this).data("meeting-id");
+            showEditMeetingPopup(meetingId);
+        });
+
+        // Attach click event handler to the "Close" buttons in the popups
+        $("#addMeetingForm #closeForm").click(function () {
+            document.getElementById("addMeetingForm").style.display = "none";
+        });
+
+        $("#editMeetingForm #closeForm").click(function () {
+            document.getElementById("editMeetingForm").style.display = "none";
+        });
+    });
+</script>
+
+
+
+
+
+<script>
+
+    function closePopup() {
+        var addUserForm = document.getElementById("addUserForm");
+        addUserForm.style.display = "none";
+    }
+</script>
+<script>
+
+    $(document).ready(function () {
+        $("#addUserButton").click(function () {
+            $("#addUserForm").toggle();
+        });
+    });
+
+
+    // Close the form when the "Close" button is clicked
+    $("#closeForm").click(function () {
+        $(".popup-form").hide();
+    });
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const pages = document.querySelectorAll('.page');
+
+            function showPage(pageId) {
+                pages.forEach(function (page) {
+                    if (page.id === pageId) {
+                        page.style.display = 'block';
+                    } else {
+                        page.style.display = 'none';
+                    }
+                });
+            }
+
+            function setActiveLink(link) {
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(function (navLink) {
+                    if (navLink === link) {
+                        navLink.classList.add('active');
+                    } else {
+                        navLink.classList.remove('active');
+                    }
+                });
+            }
+
+            function navigateToPage(event) {
+                event.preventDefault();
+                const target = event.target;
+                const pageId = target.getAttribute('href').substring(1);
+
+                showPage(pageId);
+                setActiveLink(target);
+            }
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(function (navLink) {
+                navLink.addEventListener('click', navigateToPage);
+            });
+
+            // Show the default page (Dashboard)
+            showPage('dashboard');
+            setActiveLink(navLinks[0]);
+        });$(document).ready(function () {
+    // Attach change event handler to the room dropdown in the edit meeting form
+    $('#editRoomDropdown').change(function () {
+        var selectedRoomId = $(this).val(); // Get the selected room ID
+        var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+        if (selectedRoom) {
+            // Update the room name and capacity
+            $('#editRoomName').text(selectedRoom.RoomName);
+            $('#editRoomCapacity').text(selectedRoom.Capacity);
+        }
+    });
+
+    // Attach change event handler to the room dropdown in the add meeting form
+    $('#addRoomDropdown').change(function () {
+        var selectedRoomId = $(this).val(); // Get the selected room ID
+        var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+        if (selectedRoom) {
+            // Update the room name and capacity
+            $('#addRoomName').text(selectedRoom.RoomName);
+            $('#addRoomCapacity').text(selectedRoom.Capacity);
+        }
+    });
+
+    // Function to find a room object by its ID
+    function findRoomById(roomId) {
+        var rooms = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Rooms)); // Get the list of rooms from ViewBag
+
+        for (var i = 0; i < rooms.length; i++) {
+            if (rooms[i].RoomId == roomId) {
+                return rooms[i];
+            }
+        }
+
+        return null;
+    }
+});
+
+
+    $(document).ready(function () {
+        // Attach change event handler to the room dropdown
+        $('#addRoomDropdown').change(function () {
+            var selectedRoomId = $(this).val(); // Get the selected room ID
+            var selectedRoom = findRoomById(selectedRoomId); // Find the room object from the list of rooms
+            if (selectedRoom) {
+                // Update the room name and capacity
+                $('#addRoomName').text(selectedRoom.RoomName);
+                $('#addRoomCapacity').text(selectedRoom.Capacity);
+            }
+        });
+
+        // Function to find a room object by its ID
+        function findRoomById(roomId) {
+            var rooms = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Rooms)); // Get the list of rooms from ViewBag
+
+            for (var i = 0; i < rooms.length; i++) {
+                if (rooms[i].RoomId == roomId) {
+                    return rooms[i];
+                }
+            }
+
+            return null;
+        }
+    });
+</script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+@*<script>
+    // Wait for the document to finish loading
+    document.addEventListener('DOMContentLoaded', function () {
+        // Find the logout button by its ID
+        var logoutButton = document.getElementById('logoutButton');
+
+        // Check if the logout button exists
+        if (logoutButton) {
+            // Attach a click event listener to the logout button
+            logoutButton.addEventListener('click', function () {
+                // Perform the logout action here
+                // For example, you can use an AJAX request to a logout endpoint or clear the session/cookie
+
+                // Redirect the user to the login page
+                window.location.href = '/Home/Login';
+            });
+        }
+    });
+</script>*@
+
+
